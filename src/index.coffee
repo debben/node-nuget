@@ -8,10 +8,10 @@ crypto = require 'crypto'
 vinyl = require 'vinyl-fs'
 
 require 'shelljs/global'
-NUGET_EXE = path.resolve(path.join(__dirname, './bin/NuGet.exe'))
+NUGET_EXE = path.resolve(path.join(__dirname, '../bin/NuGet.exe'))
 
 runCommand = (command, arg) ->
-  args = [NUGET_EXE, command, arg]
+  args = [NUGET_EXE, command, '"' + arg + '"']
   args.unshift('mono') unless process.platform is 'win32'
   exec args.join(' ')
 
@@ -29,6 +29,12 @@ getFile = (file, callback) ->
 
 randomFilename = -> crypto.createHash('sha1').update(new Date().getTime().toString()+_.uniqueId()).digest('hex')
 
+getAssemblyInformationalVersion = () ->
+  fileContents = fs.readFileSync('Properties/AssemblyInfo.cs','ucs2')
+  expr = /AssemblyInformationalVersion\(\"((\d|\.)+)\"\)/       
+  return fileContents.match(expr)[1]
+
+
 module.exports = class NodeNuget
   @setApiKey: (key, callback) ->
     return callback(new Error 'Failed to set API key') if runCommand('setApiKey', key).code isnt 0
@@ -42,9 +48,9 @@ module.exports = class NodeNuget
         return callback(err) if err
 
         package_desc = et.parse(data.toString())
-        package_id = package_desc.findtext('./metadata/id')
-        package_version = package_desc.findtext('./metadata/version')
-
+        package_id = package_desc.findtext('./metadata/id') || package_desc.findtext('./PropertyGroup/AssemblyName')
+        package_version = package_desc.findtext('./metadata/version') || getAssemblyInformationalVersion()
+        
         files = (path.join(path.dirname(file.path), item.attrib?.src) for item in package_desc.findall('./files/file'))
         if (missing_files = (item for item in file when not fs.existsSync(item))).length
           return callback(new Error "Nuget: cannot build #{file.path}. Missing files: #{missing_files}")

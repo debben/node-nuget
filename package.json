@@ -7,7 +7,7 @@
     "nuget",
     "mono"
   ],
-  "main": "index.coffee",
+  "main": "lib/index.js",
   "license": "MIT",
   "author": "Kevin Malakoff (https://github.com/kmalakoff)",
   "repository": {
@@ -21,10 +21,13 @@
     "coffee-script": "*",
     "elementtree": "^0.1.6",
     "event-stream": "*",
+    "queue-async": "*",
     "semver": "^2.3.1",
     "shelljs": "^0.3.0",
     "underscore": "*",
-    "queue-async": "*",
     "vinyl-fs": "^0.3.4"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.10.0"
   }
 }
